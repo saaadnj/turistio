@@ -1,0 +1,412 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  MOD
+  ADMIN
+}
+
+enum AttractionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum Category {
+  CULTURE
+  NATURE
+  BEACHES
+  RELIGION
+  ENTERTAINMENT
+  LIFESTYLE
+}
+
+/**
+ * CORE AUTHENTICATION MODELS (NextAuth / Auth.js Standard)
+ */
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String?
+  avatarUrl     String?
+  bio           String?   @db.Text
+  birthdate     DateTime?
+  isPrivate     Boolean   @default(false)
+  role          UserRole  @default(USER)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  accounts        Account[]
+  sessions        Session[]
+  friendsSent     Friendship[] @relation("FriendshipRequest")
+  friendsReceived Friendship[] @relation("FriendshipReceive")
+  diaries         Diary[]
+  proposals       Proposal[]
+  favorites       Favorite[]
+  reviews         Review[]
+  comments        Comment[]
+  likes           Like[]
+  reports         Report[]
+  notifications   Notification[]
+  itineraries     ItineraryCollaborator[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  // <-- CORREGIDO DE Int A String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String   // <-- CORREGIDO
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationCode {
+  id        Int      @id @default(autoincrement())
+  email     String
+  code      String
+  expiresAt DateTime
+
+  @@unique([email, code])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+}
+
+/**
+ * GEOGRAPHY & ATTRACTIONS MODELS
+ */
+
+model Region {
+  id        Int        @id @default(autoincrement())
+  name      String
+  slug      String     @unique
+  imageUrl  String?
+  provinces Province[]
+}
+
+model Province {
+  id             Int            @id @default(autoincrement())
+  name           String
+  slug           String         @unique
+  imageUrl       String?
+  regionId       Int
+  region         Region         @relation(fields: [regionId], references: [id])
+  municipalities Municipality[]
+}
+
+model Municipality {
+  id          Int          @id @default(autoincrement())
+  name        String
+  slug        String       @unique
+  description String?      @db.Text
+  imageUrl    String?
+  latitude    Float
+  longitude   Float
+  provinceId  Int
+  province    Province     @relation(fields: [provinceId], references: [id])
+  attractions Attraction[]
+  proposals   Proposal[]
+}
+
+model Attraction {
+  id             Int              @id @default(autoincrement())
+  name           String
+  slug           String           @unique
+  description    String           @db.Text
+  category       Category
+  status         AttractionStatus @default(PUBLISHED)
+  latitude       Float
+  longitude      Float
+  address        String?
+  website        String?
+  averageRating  Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  municipalityId Int
+  municipality   Municipality     @relation(fields: [municipalityId], references: [id])
+
+  images         AttractionImage[]
+  openingHours   OpeningHour[]
+  tariffs        Tariff[]
+  features       AttractionToFeature[]
+  favorites      Favorite[]
+  reviews        Review[]
+  diaryEntries   DiaryEntry[]
+  itineraryItems ItineraryItem[]
+}
+
+model AttractionImage {
+  id           Int        @id @default(autoincrement())
+  url          String
+  altText      String?
+  order        Int        @default(0)
+  attractionId Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+}
+
+model OpeningHour {
+  id           Int        @id @default(autoincrement())
+  dayOfWeek    Int
+  openTime     String?
+  closeTime    String?
+  isClosed     Boolean    @default(false)
+  attractionId Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+}
+
+model Tariff {
+  id           Int        @id @default(autoincrement())
+  name         String
+  price        Float
+  description  String?
+  attractionId Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+}
+
+model Feature {
+  id          Int                   @id @default(autoincrement())
+  name        String                @unique
+  slug        String                @unique
+  iconName    String?
+  attractions AttractionToFeature[]
+}
+
+model AttractionToFeature {
+  attractionId Int
+  featureId    Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  feature      Feature    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([attractionId, featureId])
+}
+
+/**
+ * SOCIAL & COMMUNITY MODELS
+ */
+
+model Diary {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?      @db.Text
+  coverUrl    String?
+  isPublic    Boolean      @default(true)
+  userId      String       // <-- CORREGIDO
+  user        User         @relation(fields: [userId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  entries     DiaryEntry[]
+  comments    Comment[]
+  likes       Like[]
+  reports     Report[]
+}
+
+model DiaryEntry {
+  id           Int         @id @default(autoincrement())
+  title        String
+  content      String      @db.Text
+  date         DateTime
+  imageUrl     String?
+  diaryId      Int
+  diary        Diary       @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  attractionId Int?
+  attraction   Attraction? @relation(fields: [attractionId], references: [id])
+  comments     Comment[]
+  likes        Like[]
+}
+
+model Proposal {
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String           @db.Text
+  category       String
+  status         AttractionStatus @default(DRAFT)
+  adminNote      String?          @db.Text
+  latitude       Float
+  longitude      Float
+  address        String?
+  website        String?
+  userId         String           // <-- CORREGIDO
+  user           User             @relation(fields: [userId], references: [id])
+  municipalityId Int
+  municipality   Municipality     @relation(fields: [municipalityId], references: [id])
+  createdAt      DateTime         @default(now())
+}
+
+model Friendship {
+  id          Int              @id @default(autoincrement())
+  requesterId String           // <-- CORREGIDO
+  receiverId  String           // <-- CORREGIDO
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  requester   User             @relation("FriendshipRequest", fields: [requesterId], references: [id])
+  receiver    User             @relation("FriendshipReceive", fields: [receiverId], references: [id])
+
+  @@unique([requesterId, receiverId])
+}
+
+model Favorite {
+  id           Int        @id @default(autoincrement())
+  userId       String     // <-- CORREGIDO
+  user         User       @relation(fields: [userId], references: [id])
+  attractionId Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, attractionId])
+}
+
+model Review {
+  id           Int        @id @default(autoincrement())
+  content      String?    @db.Text
+  rating       Int
+  userId       String     // <-- CORREGIDO
+  user         User       @relation(fields: [userId], references: [id])
+  attractionId Int
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  likes        Like[]
+  reports      Report[]
+}
+
+model Comment {
+  id           Int         @id @default(autoincrement())
+  content      String      @db.Text
+  userId       String      // <-- CORREGIDO
+  user         User        @relation(fields: [userId], references: [id])
+  diaryId      Int?
+  diary        Diary?      @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  diaryEntryId Int?
+  diaryEntry   DiaryEntry? @relation(fields: [diaryEntryId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  likes        Like[]
+  reports      Report[]
+}
+
+model Like {
+  id           Int         @id @default(autoincrement())
+  userId       String      // <-- CORREGIDO
+  user         User        @relation(fields: [userId], references: [id])
+  reviewId     Int?
+  review       Review?     @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  diaryId      Int?
+  diary        Diary?      @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  diaryEntryId Int?
+  diaryEntry   DiaryEntry? @relation(fields: [diaryEntryId], references: [id], onDelete: Cascade)
+  commentId    Int?
+  comment      Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+
+  @@unique([userId, reviewId])
+  @@unique([userId, diaryId])
+  @@unique([userId, diaryEntryId])
+  @@unique([userId, commentId])
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  reporterId String   // <-- CORREGIDO
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  reason     String   @db.Text
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+
+  reviewId   Int?
+  review     Review?  @relation(fields: [reviewId], references: [id])
+  diaryId    Int?
+  diary      Diary?   @relation(fields: [diaryId], references: [id])
+  commentId  Int?
+  comment    Comment? @relation(fields: [commentId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String   // <-- CORREGIDO
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+/**
+ * ITINERARIES MODELS
+ */
+
+model Itinerary {
+  id            Int                     @id @default(autoincrement())
+  title         String
+  description   String?                 @db.Text
+  coverUrl      String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  collaborators ItineraryCollaborator[]
+  items         ItineraryItem[]
+}
+
+model ItineraryCollaborator {
+  id          Int       @id @default(autoincrement())
+  itineraryId Int
+  userId      String    // <-- CORREGIDO
+  role        String
+  status      String
+
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([itineraryId, userId])
+}
+
+model ItineraryItem {
+  id           Int        @id @default(autoincrement())
+  itineraryId  Int
+  attractionId Int
+  order        Int        @default(0)
+  day          Int        @default(1)
+  notes        String?    @db.Text
+
+  itinerary  Itinerary  @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  attraction Attraction @relation(fields: [attractionId], references: [id])
+}
