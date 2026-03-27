@@ -1,26 +1,164 @@
-@import "tailwindcss";
+/* ─── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,300;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette — deep teal editorial */
+  --color-primary:                  #00333c;
+  --color-on-primary:               #ffffff;
+  --color-primary-container:        #c8eef4;
+  --color-on-primary-container:     #001f26;
+
+  --color-secondary:                #4a6267;
+  --color-on-secondary:             #ffffff;
+  --color-secondary-container:      #cde7ed;
+  --color-on-secondary-container:   #051f24;
+  --color-secondary-fixed:          #cde7ed;
+  --color-on-secondary-fixed:       #051f24;
+
+  --color-error:                    #ba1a1a;
+  --color-on-error:                 #ffffff;
+
+  /* Surfaces */
+  --color-surface:                  #f6fafb;
+  --color-on-surface:               #171d1e;
+  --color-on-surface-variant:       #3f4f52;
+
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low:    #f0f4f5;
+  --color-surface-container:        #e4eaeb;
+  --color-surface-container-high:   #dfe5e6;
+  --color-surface-container-highest:#d9dfe0;
+
+  --color-outline:                  #6f797b;
+  --color-outline-variant:          #bfc8ca;
+
+  /* Gradients */
+  --gradient-editorial: linear-gradient(135deg, #00333c 0%, #005f70 60%, #007d8a 100%);
 }
 
+/* ─── Tailwind v4 theme bridge ──────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:               var(--color-surface);
+  --color-foreground:               var(--color-on-surface);
+
+  /* Map semantic tokens so tw classes like bg-primary work */
+  --color-primary:                  var(--color-primary);
+  --color-on-primary:               var(--color-on-primary);
+  --color-primary-container:        var(--color-primary-container);
+  --color-on-primary-container:     var(--color-on-primary-container);
+
+  --color-secondary:                var(--color-secondary);
+  --color-on-secondary:             var(--color-on-secondary);
+  --color-secondary-container:      var(--color-secondary-container);
+  --color-on-secondary-container:   var(--color-on-secondary-container);
+  --color-secondary-fixed:          var(--color-secondary-fixed);
+  --color-on-secondary-fixed:       var(--color-on-secondary-fixed);
+
+  --color-error:                    var(--color-error);
+  --color-on-error:                 var(--color-on-error);
+
+  --color-surface:                  var(--color-surface);
+  --color-on-surface:               var(--color-on-surface);
+  --color-on-surface-variant:       var(--color-on-surface-variant);
+
+  --color-surface-container-lowest: var(--color-surface-container-lowest);
+  --color-surface-container-low:    var(--color-surface-container-low);
+  --color-surface-container:        var(--color-surface-container);
+  --color-surface-container-high:   var(--color-surface-container-high);
+  --color-surface-container-highest:var(--color-surface-container-highest);
+
+  --color-outline:                  var(--color-outline);
+  --color-outline-variant:          var(--color-outline-variant);
+
+  /* Typography */
+  --font-headline: 'Noto Serif', Georgia, serif;
+  --font-body:     'Plus Jakarta Sans', sans-serif;
+  --font-label:    'Plus Jakarta Sans', sans-serif;
+  --font-mono:     'DM Mono', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* ─── Font utility classes ──────────────────────────────────────────────────── */
+.font-headline { font-family: var(--font-headline); }
+.font-body     { font-family: var(--font-body); }
+.font-label    { font-family: var(--font-label); }
+
+/* ─── Material Symbols ──────────────────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+}
+
+/* ─── Gradient utility ──────────────────────────────────────────────────────── */
+.editorial-gradient {
+  background: var(--gradient-editorial);
+}
+
+/* ─── Hero vignette ─────────────────────────────────────────────────────────── */
+.hero-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.75) 40%,
+    rgba(255, 255, 255, 0.10) 100%
+  );
+  pointer-events: none;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface-container-low); }
+::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-secondary); }
+
+/* ─── Focus ring ────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ─── Selection ─────────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary-container);
 }

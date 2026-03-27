@@ -1,8 +1,10 @@
-const express = require('express');
-const AttractionController = require('../controllers/AttractionController');
+const express = require("express");
+const AttractionController = require("../controllers/AttractionController");
 const router = express.Router();
 
-router.get('/', AttractionController.getAllAttractions);
-router.get('/:id', AttractionController.getAttractionById);
+// GET /attractions?regionId&provinceId&municipalityId&category&minRating&page&pageSize
+router.get("/", AttractionController.getAllAttractions);
+// GET /attractions/:id
+router.get("/:id", AttractionController.getAttractionById);
 
 module.exports = router;
